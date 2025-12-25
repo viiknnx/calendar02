@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário Dinâmico Transparente</title>
+    <style>
+        /* Configuração da fonte local rm_typerighter */
+        @font-face {
+            font-family: 'rm_typerighter';
+            src: url('rm_typerighter.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'rm_typerighter', 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background: transparent;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #000;
+            overflow: hidden;
+        }
+
+        /* Container Principal do Calendário */
+        .calendar-container {
+            width: 260px;
+            background-image: url('cinza02-wallpaper.jfif');
+            background-size: cover;
+            background-position: center;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Overlay para garantir legibilidade */
+        .calendar-container::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            z-index: 0;
+        }
+
+        .month-year-wrapper, .days-box {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Seção do Mês e Ano */
+        .month-year-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .month-year-display {
+            width: 100%;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 2px; 
+            padding: 8px;
+            background: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Caixa interna para os números */
+        .days-box {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            padding: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Seção dos Dias da Semana - Ajustada para botões */
+        .weekdays-row {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 6px;
+        }
+
+        .weekdays-row div {
+            aspect-ratio: 1 / 0.8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.55rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: #ece6e5;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8);
+        }
+
+        /* Seção dos Números */
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px; 
+            width: 100%;
+        }
+
+        .days-grid div {
+            /* Alterado de 1/1 para 1/0.85 para diminuir a altura mantendo a largura */
+            aspect-ratio: 1 / 0.85; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            position: relative;
+            background: transparent;
+            border: 1px solid transparent;
+        }
+
+        /* Estilo para dias normais - Efeito Glossy e Sombra Interna Aumentados */
+        .day-item {
+            background: linear-gradient(180deg, 
+                #f9f9f9 0%, 
+                #f6f6f6 48%, 
+                #e0e0e0 50%, 
+                #ebebeb 100%) !important;
+            border: 1px solid rgba(0, 0, 0, 0.15) !important;
+            /* Sombra interna para profundidade e brilho na borda superior */
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 1), 
+                        inset 0 -1px 2px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Destaque para o dia atual - Glossy e Sombra Interna Aumentados */
+        .days-grid .today {
+            background: linear-gradient(180deg, 
+                #ffffff 0%, 
+                #ece6e6 48%, 
+                #c9c2c2 50%, 
+                #d6d1d1 100%) !important;
+            border: 1px solid rgba(0, 0, 0, 0.25) !important;
+            font-weight: bold;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 1), 
+                        inset 0 -2px 3px rgba(0, 0, 0, 0.15) !important;
+            cursor: pointer;
+        }
+
+        .days-grid .today:hover {
+            filter: brightness(1.05);
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .empty {
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calendar-container">
+        <div class="month-year-wrapper">
+            <div class="month-year-display" id="month-year"></div>
+        </div>
+
+        <div class="days-box">
+            <div class="weekdays-row">
+                <div>Dom</div>
+                <div>Seg</div>
+                <div>Ter</div>
+                <div>Qua</div>
+                <div>Qui</div>
+                <div>Sex</div>
+                <div>Sáb</div>
+            </div>
+
+            <div class="days-grid" id="days-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        function generateCalendar() {
+            const daysContainer = document.getElementById('days-grid');
+            const monthYearText = document.getElementById('month-year');
+            const now = new Date();
+            const currentDay = now.getDate();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            const monthNames = [
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ];
+
+            monthYearText.innerText = `${monthNames[currentMonth]} ${currentYear}`;
+
+            const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            daysContainer.innerHTML = '';
+
+            for (let x = 0; x < firstDayIndex; x++) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.classList.add('empty');
+                daysContainer.appendChild(emptyDiv);
+            }
+
+            for (let i = 1; i <= lastDay; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.innerText = i;
+                dayDiv.classList.add('day-item');
+
+                if (i === currentDay) {
+                    dayDiv.classList.add('today');
+                }
+
+                daysContainer.appendChild(dayDiv);
+            }
+        }
+
+        window.onload = generateCalendar;
+    </script>
+</body>
+</html>
